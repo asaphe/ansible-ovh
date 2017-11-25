@@ -8,48 +8,51 @@ ANSIBLE_METADATA = {
 
 DOCUMENTATION = '''
 ---
-module: my_sample_module
+module: ovh_server
 
-short_description: This is my sample module
+short_description: ovh api /server
 
 version_added: "2.4"
 
 description:
-    - "This is my longer description explaining my sample module"
+    - "This module provisions an OVH dedicated server"
 
 options:
-    name:
+    template:
         description:
-            - This is the message to send to the sample module
+            - Template name to use for the installation [must exist under /me/templates]
         required: true
-    new:
+
+    hostname:
         description:
-            - Control to demo if the result of this module is changed or not
+            - Hostname
+        required: false
+
+    ssh_key:
+        description:
+            - SSH Key to use for login
+        required: false
+
+    distrib_kernel:
+        description:
+            - Use distribution kernel instead of OVH's kernel
         required: false
 
 extends_documentation_fragment:
-    - azure
+    - ovh
 
 author:
-    - Your Name (@yourhandle)
+    - Asaph Efrati (@asaphe)
 '''
 
 EXAMPLES = '''
 # Pass in a message
 - name: Test with a message
-  my_new_test_module:
-    name: hello world
-
-# pass in a message and have changed true
-- name: Test with a message and changed output
-  my_new_test_module:
-    name: hello world
-    new: true
-
-# fail the module
-- name: Test failure of the module
-  my_new_test_module:
-    name: fail me
+  ovh_server:
+    template: foo
+    hostname: bar
+    ssh_key: pub
+    distrib_kernel: true
 '''
 
 RETURN = '''
