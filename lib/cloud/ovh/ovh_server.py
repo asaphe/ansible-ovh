@@ -69,8 +69,10 @@ def run_module():
     # define the available arguments/parameters that a user can pass to
     # the module
     module_args = dict(
-        name=dict(type='str', required=True),
-        new=dict(type='bool', required=False, default=False)
+        template=dict(type='str', required=True),
+        hostname=dict(type='str', required=False),
+        ssh_key=dict(type='str', required=False),
+        distrib_kernel=dict(type='bool', required=False, default=False)
     )
 
     # seed the result dict in the object
