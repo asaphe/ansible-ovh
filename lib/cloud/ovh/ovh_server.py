@@ -18,6 +18,10 @@ description:
     - "This module provisions an OVH dedicated server"
 
 options:
+    service:
+        description:
+            - OVH Service name
+
     template:
         description:
             - Template name to use for the installation [must exist under /me/templates]
@@ -49,6 +53,7 @@ EXAMPLES = '''
 # Pass in a message
 - name: Test with a message
   ovh_server:
+    service: name
     template: foo
     hostname: bar
     ssh_key: pub
@@ -64,11 +69,47 @@ message:
 '''
 
 from ansible.module_utils.basic import AnsibleModule
+import yaml
+try:
+    import ovh
+    import ovh.exceptions
+    from ovh.exceptions import APIError
+except ImportError:
+    module.fail_json(msg='missing a required module', **result)
+
+
+def ovh_client(endpoint, application_key, application_secret, consumer_key):
+    """Create a client connection to OVH"""
+    if (v is not None for v in [endpoint,
+                                application_key,
+                                application_secret,
+                                consumer_key]):
+        return ovh.Client(
+            endpoint=endpoint,
+            application_key=application_key,
+            application_secret=application_secret,
+            consumer_key=consumer_key)
+    else:
+        raise Exception('Variable set to None. cannot be None.')
+
+
+def load_yaml(config_file):
+    """Load the configuration file."""
+    with open(config_file, 'r') as yml_file:
+        cfg = yaml.load(yml_file)
+    return cfg
+
+
+def get_dedicated_server(client, service):
+    """Get a dedicated server."""
+    return client.get()
+
 
 def run_module():
     # define the available arguments/parameters that a user can pass to
     # the module
     module_args = dict(
+        service=dict(type='str', required=True),
         template=dict(type='str', required=True),
         hostname=dict(type='str', required=False),
         ssh_key=dict(type='str', required=False),
@@ -95,6 +136,23 @@ def run_module():
         supports_check_mode=True
     )
 
+    try:
+        cfg = load_yaml('./ovh.yaml')
+        client = ovh_client(**cfg)
+        response = client.get('/dedicated/server/%s' % module.params['service'])
+        if response.get('os'):
+            pass
+        elif reinstall:
+            pass
+        else:
+            pass
+    except APIError as api_error:
+        module.fail_json(msg=str(api_error), **result)
+    except IOError as e:
+        module.fail_json(msg=str(e), **result)
+    except Exception as e:
+        module.fail_json(msg=str(e), **result)
+
     # if the user is working with this module in only check mode we do not
     # want to make any changes to the environment, just return the current
     # state with no modifications
@@ -103,19 +161,19 @@ def run_module():
 
     # manipulate or modify the state as needed (this is going to be the
     # part where your module will do what it needs to do)
-    result['original_message'] = module.params['name']
-    result['message'] = 'goodbye'
+    # result['original_message'] = module.params['hostname']
+    # result['message'] = 'goodbye'
 
     # use whatever logic you need to determine whether or not this module
     # made any modifications to your target
-    if module.params['new']:
-        result['changed'] = True
+    # if module.params['hostname']:
+    #     result['changed'] = True
 
     # during the execution of the module, if there is an exception or a
     # conditional state that effectively causes a failure, run
     # AnsibleModule.fail_json() to pass in the message and the result
-    if module.params['name'] == 'fail me':
-        module.fail_json(msg='You requested this to fail', **result)
+    # if module.params['hostname'] == 'fail me':
+    #     module.fail_json(msg='You requested this to fail', **result)
 
     # in the event of a successful module execution, you will want to
     # simple AnsibleModule.exit_json(), passing the key/value results
