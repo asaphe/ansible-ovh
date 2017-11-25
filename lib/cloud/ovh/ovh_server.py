@@ -42,6 +42,11 @@ options:
             - Use distribution kernel instead of OVH's kernel
         required: false
 
+    reinstall:
+        description:
+            - Reinstall the OS
+        required: false
+
 extends_documentation_fragment:
     - ovh
 
@@ -58,6 +63,7 @@ EXAMPLES = '''
     hostname: bar
     ssh_key: pub
     distrib_kernel: true
+    reinstall: false
 '''
 
 RETURN = '''
@@ -102,7 +108,19 @@ def load_yaml(config_file):
 
 def get_dedicated_server(client, service):
     """Get a dedicated server."""
-    return client.get()
+    return client.get('/dedicated/server/%s' % service)
+
+
+def get_templates(client):
+    results = client.get('/me/installationTemplate')
+    return results
+
+
+def install_dedicated_server(client, service, data):
+    """Install a dedicated server from a Template."""
+    client.post('/dedicated/server/%s/install/start' %
+                service,
+                **data)
 
 
 def run_module():
@@ -113,7 +131,8 @@ def run_module():
         template=dict(type='str', required=True),
         hostname=dict(type='str', required=False),
         ssh_key=dict(type='str', required=False),
-        distrib_kernel=dict(type='bool', required=False, default=False)
+        distrib_kernel=dict(type='bool', required=False, default=False),
+        reinstall=dict(type='bool', required=False, default=False)
     )
 
     # seed the result dict in the object
@@ -139,13 +158,17 @@ def run_module():
     try:
         cfg = load_yaml('./ovh.yaml')
         client = ovh_client(**cfg)
-        response = client.get('/dedicated/server/%s' % module.params['service'])
-        if response.get('os'):
-            pass
-        elif reinstall:
-            pass
-        else:
-            pass
+        server = client.get('/dedicated/server/%s' % module.params['service'])
+        if not server.get('os') and module.params['reinstall']:
+            templates = get_templates(client)
+            if module.params['template'] in templates:
+                data = {"details": {"language": "en",
+                                    "customHostname": module.params['hostname'],
+                                    "sshKeyName": module.params['ssh_key'],
+                                    "useDistribKernel": module.params['distrib_kernel']
+                                    },
+                                    "templateName": module.params['template']}
+                install_dedicated_server(client, module.params['service'], data)
     except APIError as api_error:
         module.fail_json(msg=str(api_error), **result)
     except IOError as e:
