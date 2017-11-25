@@ -1,0 +1,11 @@
+---
+# Test for custom ovh modules
+
+- hosts: localhost
+  tasks:
+    - name: Test with a message
+      ovh_server:
+        template: foo
+        hostname: bar
+        ssh_key: pub
+        distrib_kernel: true
