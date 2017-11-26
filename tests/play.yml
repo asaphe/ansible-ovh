@@ -5,6 +5,7 @@
   tasks:
     - name: Test with a message
       ovh_server:
+        service: name
         template: foo
         hostname: bar
         ssh_key: pub
