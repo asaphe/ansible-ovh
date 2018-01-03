@@ -85,7 +85,7 @@ except ImportError:
 
 
 def ovh_client(endpoint, application_key, application_secret, consumer_key):
-    """Create a client connection to OVH"""
+    """Create a client connection to OVH."""
     if (v is not None for v in [endpoint,
                                 application_key,
                                 application_secret,
@@ -112,6 +112,7 @@ def get_dedicated_server(client, service):
 
 
 def get_templates(client):
+    """Get a list of available templates."""
     results = client.get('/me/installationTemplate')
     return results
 
