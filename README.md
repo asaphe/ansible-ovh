@@ -5,6 +5,18 @@ OVH API Ansible module
 This module provisions an OVH dedicated server.
 Install a dedicated server using an existing template.
 
+This module is *not being actively developed* at the moment.
+Contributions are welcome.
+
+### Requirements
+The module expects to find an 'ovh.yaml' file containing the following:
+```
+endpoint: ovh-ca
+application_key: somekey
+application_secret: somesecret
+consumer_key: someconsumerkey
+```
+
 ### Available options:
 ```
 options:
