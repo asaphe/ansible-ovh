@@ -17,6 +17,10 @@ version_added: "2.4"
 description:
     - "This module provisions an OVH dedicated server"
 
+required:
+    - cfg: a yaml file loaded from playbook path ('./ovh.yaml') containing OVH (endpoint,
+    application_key, application_secret, consumer_key) which is required for OVH api calls
+
 options:
     service:
         description:
@@ -39,12 +43,7 @@ options:
 
     distrib_kernel:
         description:
-            - Use distribution kernel instead of OVH's kernel
-        required: false
-
-    reinstall:
-        description:
-            - Reinstall the OS
+            - Use distribution kernel instead of OVH kernel
         required: false
 
 extends_documentation_fragment:
@@ -63,7 +62,6 @@ EXAMPLES = '''
     hostname: bar
     ssh_key: pub
     distrib_kernel: true
-    reinstall: false
 '''
 
 RETURN = '''
@@ -113,8 +111,7 @@ def get_dedicated_server(client, service):
 
 def get_templates(client):
     """Get a list of available templates."""
-    results = client.get('/me/installationTemplate')
-    return results
+    return client.get('/me/installationTemplate')
 
 
 def install_dedicated_server(client, service, data):
@@ -123,6 +120,9 @@ def install_dedicated_server(client, service, data):
                 service,
                 **data)
 
+def get_installation_status(client, service):
+    """Get installation status"""
+    return client.get('/dedicated/server/%s/install/status' % service)
 
 def run_module():
     # define the available arguments/parameters that a user can pass to
@@ -132,8 +132,7 @@ def run_module():
         template=dict(type='str', required=True),
         hostname=dict(type='str', required=False),
         ssh_key=dict(type='str', required=False),
-        distrib_kernel=dict(type='bool', required=False, default=False),
-        reinstall=dict(type='bool', required=False, default=False)
+        distrib_kernel=dict(type='bool', required=False, default=False)
     )
 
     # seed the result dict in the object
@@ -159,17 +158,17 @@ def run_module():
     try:
         cfg = load_yaml('./ovh.yaml')
         client = ovh_client(**cfg)
-        server = client.get('/dedicated/server/%s' % module.params['service'])
-        if not server.get('os') and module.params['reinstall']:
-            templates = get_templates(client)
-            if module.params['template'] in templates:
-                data = {"details": {"language": "en",
-                                    "customHostname": module.params['hostname'],
-                                    "sshKeyName": module.params['ssh_key'],
-                                    "useDistribKernel": module.params['distrib_kernel']
-                                    },
-                                    "templateName": module.params['template']}
-                install_dedicated_server(client, module.params['service'], data)
+        # server = client.get('/dedicated/server/%s' % module.params['service'])
+        # if not server.get('os') and module.params['reinstall']:
+        templates = get_templates(client)
+        if module.params['template'] in templates:
+            data = {"details": {"language": "en",
+                                "customHostname": module.params['hostname'],
+                                "sshKeyName": module.params['ssh_key'],
+                                "useDistribKernel": module.params['distrib_kernel']
+                                },
+                                "templateName": module.params['template']}
+            install_dedicated_server(client, module.params['service'], data)
     except APIError as api_error:
         module.fail_json(msg=str(api_error), **result)
     except IOError as e:
@@ -202,6 +201,16 @@ def run_module():
     # in the event of a successful module execution, you will want to
     # simple AnsibleModule.exit_json(), passing the key/value results
     module.exit_json(**result)
+
+    # try:
+    #     server_installation_status = get_installation_status(client, module.params['service'])
+    # except APIError as api_error:
+    #     module.fail_json(msg=str(api_error), **result)
+    # except IOError as e:
+    #     module.fail_json(msg=str(e), **result)
+    # except Exception as e:
+    #     module.fail_json(msg=str(e), **result)
+    # module.exit_json(msg=str(server_installation_status), **result)
 
 def main():
     run_module()
