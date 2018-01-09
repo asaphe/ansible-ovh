@@ -8,6 +8,8 @@ Install a dedicated server using an existing template.
 This module is *not being actively developed* at the moment.
 Contributions are welcome.
 
+**NOTE** that this module will install a new or existing server! take care when selecting server
+
 ### Requirements
 The module expects to find an 'ovh.yaml' file containing the following:
 ```
