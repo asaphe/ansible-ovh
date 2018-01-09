@@ -45,11 +45,6 @@ options:
         description:
             - Use distribution kernel instead of OVH's kernel
         required: false
-
-    reinstall:
-        description:
-            - Reinstall the OS
-        required: false
 ```
 
 ### Example Playbook:
