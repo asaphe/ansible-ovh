@@ -18,8 +18,7 @@ description:
     - "This module provisions an OVH dedicated server"
 
 required:
-    - cfg: a yaml file loaded from playbook path ('./ovh.yaml') containing OVH (endpoint,
-    application_key, application_secret, consumer_key) which is required for OVH api calls
+    - config_file: a yaml file containing OVH (endpoint, application_key, application_secret, consumer_key) which is required for OVH api calls.
 
 options:
     service:
@@ -132,7 +131,8 @@ def run_module():
         template=dict(type='str', required=True),
         hostname=dict(type='str', required=False),
         ssh_key=dict(type='str', required=False),
-        distrib_kernel=dict(type='bool', required=False, default=False)
+        distrib_kernel=dict(type='bool', required=False, default=False),
+        config_file=dict(type='str', required=True)
     )
 
     # seed the result dict in the object
@@ -156,7 +156,7 @@ def run_module():
     )
 
     try:
-        cfg = load_yaml('./ovh.yaml')
+        cfg = load_yaml(module.params['config_file'])
         client = ovh_client(**cfg)
         # server = client.get('/dedicated/server/%s' % module.params['service'])
         # if not server.get('os') and module.params['reinstall']:

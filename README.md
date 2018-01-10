@@ -11,7 +11,7 @@ Contributions are welcome.
 **NOTE** that this module will install a new or existing server! take care when selecting server
 
 ### Requirements
-The module expects to find an 'ovh.yaml' file containing the following:
+OVH Configuration to be passed as a variable - 'config_file'. yaml file containing the following:
 ```
 endpoint: ovh-ca
 application_key: somekey
