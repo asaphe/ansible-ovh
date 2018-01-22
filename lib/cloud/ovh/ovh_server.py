@@ -45,6 +45,16 @@ options:
             - Use distribution kernel instead of OVH kernel
         required: false
 
+    installation_status:
+        description:
+            - Boolean value, determines if the module will return the installation status
+        required: false
+
+    get_installation_status:
+        description:
+            - Boolean value, determines if the module will install the servers
+        required: false
+
 extends_documentation_fragment:
     - ovh
 
@@ -128,11 +138,13 @@ def run_module():
     # the module
     module_args = dict(
         service=dict(type='str', required=True),
-        template=dict(type='str', required=True),
+        template=dict(type='str', required=False),
         hostname=dict(type='str', required=False),
         ssh_key=dict(type='str', required=False),
         distrib_kernel=dict(type='bool', required=False, default=False),
-        config_file=dict(type='str', required=True)
+        config_file=dict(type='str', required=True),
+        installation_status=dict(type='bool', required=False, default=False),
+        install_server=dict(type='bool', required=False, default=False),
     )
 
     # seed the result dict in the object
@@ -168,7 +180,10 @@ def run_module():
                                 "useDistribKernel": module.params['distrib_kernel']
                                 },
                                 "templateName": module.params['template']}
-            install_dedicated_server(client, module.params['service'], data)
+        if module.params['install_server']:
+            result=install_dedicated_server(client, module.params['service'], data)
+        if module.params['installation_status']:
+            result=get_installation_status(client, module.params['service'])
     except APIError as api_error:
         module.fail_json(msg=str(api_error), **result)
     except IOError as e:
