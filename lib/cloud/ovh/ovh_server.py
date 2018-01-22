@@ -181,7 +181,7 @@ def run_module():
                                 },
                                 "templateName": module.params['template']}
         if module.params['install_server']:
-            result=install_dedicated_server(client, module.params['service'], data)
+            install_dedicated_server(client, module.params['service'], data)
         if module.params['installation_status']:
             result=get_installation_status(client, module.params['service'])
     except APIError as api_error:
