@@ -1,29 +1,34 @@
 #!/usr/bin/python
+# Copyright (c) 2017 [https://github.com/asaphe,https://github.com/rafi]
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 ANSIBLE_METADATA = {
     'metadata_version': '1.1',
-    'status': ['preview'],
-    'supported_by': 'community'
+    'supported_by': 'community',
+    'status': ['preview']
 }
 
 DOCUMENTATION = '''
 ---
 module: ovh_server
 
-short_description: ovh api /server
+short_description: Install a dedicated server using a template
 
 version_added: "2.4"
 
 description:
-    - "This module provisions an OVH dedicated server"
-
-required:
-    - config_file: a yaml file containing OVH (endpoint, application_key, application_secret, consumer_key) which is required for OVH api calls.
+    - "This module provisions an OVH dedicated server using a template"
 
 options:
+    config_file:
+        description:
+            - a yaml file containing OVH (endpoint, application_key, application_secret, consumer_key) which is required for OVH api calls.
+        required: true
+
     service:
         description:
             - OVH Service name
+        required: false
 
     template:
         description:
@@ -60,6 +65,7 @@ extends_documentation_fragment:
 
 author:
     - Asaph Efrati (@asaphe)
+    - Rafael Bodill (@rafi)
 '''
 
 EXAMPLES = '''
@@ -83,6 +89,7 @@ message:
 
 from ansible.module_utils.basic import AnsibleModule
 import yaml
+import os
 try:
     import ovh
     import ovh.exceptions
@@ -93,6 +100,25 @@ except ImportError:
 
 def ovh_client(endpoint, application_key, application_secret, consumer_key):
     """Create a client connection to OVH."""
+    if (v is not None for v in [endpoint,
+                                application_key,
+                                application_secret,
+                                consumer_key]):
+        return ovh.Client(
+            endpoint=endpoint,
+            application_key=application_key,
+            application_secret=application_secret,
+            consumer_key=consumer_key)
+    else:
+        raise Exception('Variable set to None. cannot be None.')
+
+
+def ovh_client_env():
+    """Load environment variables and return a client to OVH Endpoint."""
+    endpoint = os.environ.get('endpoint', 'ovh-ca')
+    application_key = os.environ.get('application_key')
+    application_secret = os.environ.get('application_secret')
+    consumer_key = os.environ.get('consumer_key')
     if (v is not None for v in [endpoint,
                                 application_key,
                                 application_secret,
@@ -129,13 +155,14 @@ def install_dedicated_server(client, service, data):
                 service,
                 **data)
 
+
 def get_installation_status(client, service):
-    """Get installation status"""
+    """Get installation status."""
     return client.get('/dedicated/server/%s/install/status' % service)
 
+
 def run_module():
-    # define the available arguments/parameters that a user can pass to
-    # the module
+    """Run the module."""
     module_args = dict(
         service=dict(type='str', required=True),
         template=dict(type='str', required=False),
@@ -147,21 +174,12 @@ def run_module():
         install_server=dict(type='bool', required=False, default=False),
     )
 
-    # seed the result dict in the object
-    # we primarily care about changed and state
-    # change is if this module effectively modified the target
-    # state will include any data that you want your module to pass back
-    # for consumption, for example, in a subsequent task
     result = dict(
         changed=False,
         original_message='',
         message=''
     )
 
-    # the AnsibleModule object will be our abstraction working with Ansible
-    # this includes instantiation, a couple of common attr would be the
-    # args/params passed to the execution, as well as if the module
-    # supports check mode
     module = AnsibleModule(
         argument_spec=module_args,
         supports_check_mode=True
@@ -169,9 +187,9 @@ def run_module():
 
     try:
         cfg = load_yaml(module.params['config_file'])
+        if not cfg:
+            cfg = ovh_client_env
         client = ovh_client(**cfg)
-        # server = client.get('/dedicated/server/%s' % module.params['service'])
-        # if not server.get('os') and module.params['reinstall']:
         templates = get_templates(client)
         if module.params['template'] in templates:
             data = {"details": {"language": "en",
@@ -179,7 +197,7 @@ def run_module():
                                 "sshKeyName": module.params['ssh_key'],
                                 "useDistribKernel": module.params['distrib_kernel']
                                 },
-                                "templateName": module.params['template']}
+                    "templateName": module.params['template']}
         if module.params['install_server']:
             install_dedicated_server(client, module.params['service'], data)
         if module.params['installation_status']:
@@ -191,44 +209,16 @@ def run_module():
     except Exception as e:
         module.fail_json(msg=str(e), **result)
 
-    # if the user is working with this module in only check mode we do not
-    # want to make any changes to the environment, just return the current
-    # state with no modifications
     if module.check_mode:
         return result
 
-    # manipulate or modify the state as needed (this is going to be the
-    # part where your module will do what it needs to do)
-    # result['original_message'] = module.params['hostname']
-    # result['message'] = 'goodbye'
-
-    # use whatever logic you need to determine whether or not this module
-    # made any modifications to your target
-    # if module.params['hostname']:
-    #     result['changed'] = True
-
-    # during the execution of the module, if there is an exception or a
-    # conditional state that effectively causes a failure, run
-    # AnsibleModule.fail_json() to pass in the message and the result
-    # if module.params['hostname'] == 'fail me':
-    #     module.fail_json(msg='You requested this to fail', **result)
-
-    # in the event of a successful module execution, you will want to
-    # simple AnsibleModule.exit_json(), passing the key/value results
     module.exit_json(**result)
 
-    # try:
-    #     server_installation_status = get_installation_status(client, module.params['service'])
-    # except APIError as api_error:
-    #     module.fail_json(msg=str(api_error), **result)
-    # except IOError as e:
-    #     module.fail_json(msg=str(e), **result)
-    # except Exception as e:
-    #     module.fail_json(msg=str(e), **result)
-    # module.exit_json(msg=str(server_installation_status), **result)
 
 def main():
+    """Run main."""
     run_module()
+
 
 if __name__ == '__main__':
     main()
