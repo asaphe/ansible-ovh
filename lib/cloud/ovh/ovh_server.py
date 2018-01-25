@@ -11,61 +11,57 @@ ANSIBLE_METADATA = {
 DOCUMENTATION = '''
 ---
 module: ovh_server
-
-short_description: Install a dedicated server using a template
-
+short_description: Install a dedicated server using a template.
 version_added: "2.4"
-
 description:
-    - "This module provisions an OVH dedicated server using a template"
-
+    - This module provisions an OVH dedicated server using a template.
+    - Requires a config file with OVH Credentials or ENV variables.
 options:
-    config_file:
-        description:
-            - a yaml file containing OVH (endpoint, application_key, application_secret, consumer_key) which is required for OVH api calls.
-        required: true
-
-    service:
-        description:
-            - OVH Service name
-        required: false
-
-    template:
-        description:
-            - Template name to use for the installation [must exist under /me/templates]
-        required: true
-
-    hostname:
-        description:
-            - Hostname
-        required: false
-
-    ssh_key:
-        description:
-            - SSH Key to use for login
-        required: false
-
-    distrib_kernel:
-        description:
-            - Use distribution kernel instead of OVH kernel
-        required: false
-
-    installation_status:
-        description:
-            - Boolean value, determines if the module will return the installation status
-        required: false
-
-    get_installation_status:
-        description:
-            - Boolean value, determines if the module will install the servers
-        required: false
-
-extends_documentation_fragment:
-    - ovh
-
-author:
-    - Asaph Efrati (@asaphe)
-    - Rafael Bodill (@rafi)
+  config_file:
+    required: False
+    description:
+      - a yaml file containing OVH (endpoint, application_key, application_secret, consumer_key)
+        which is required for OVH api calls.
+      - if no file has been provided ENV variables will be used.
+  service:
+    required: True
+    description:
+      - Service name as per OVH allocation
+  template:
+    required: False
+    description:
+      - Template name to use for the installation [must exist under
+        /me/templates].
+  hostname:
+    required: False
+    description:
+      - Server hostname to set.
+  ssh_key:
+    required: False
+    description:
+      - SSH Key defined in OVH to use for login.
+  distrib_kernel:
+    required: False
+    default: False
+    description:
+      - Distribution kernel [OVH/dist].
+  installation_status:
+    required: False
+    default: False
+    description:
+      - Determines if the module will return the
+        installation status
+  install_server:
+    required: False
+    default: False
+    description:
+      - Determines if the module will install
+        selected servers
+requirements:
+    - "python >= 2.6"
+authors:
+    - "Asaph Efrati (@asaphe)"
+    - "Rafael Bodill (@rafi)"
 '''
 
 EXAMPLES = '''
@@ -169,7 +165,7 @@ def run_module():
         hostname=dict(type='str', required=False),
         ssh_key=dict(type='str', required=False),
         distrib_kernel=dict(type='bool', required=False, default=False),
-        config_file=dict(type='str', required=True),
+        config_file=dict(type='str', required=False),
         installation_status=dict(type='bool', required=False, default=False),
         install_server=dict(type='bool', required=False, default=False),
     )
