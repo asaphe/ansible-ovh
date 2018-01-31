@@ -91,7 +91,7 @@ try:
     import ovh.exceptions
     from ovh.exceptions import APIError
 except ImportError:
-    module.fail_json(msg='missing a required module', **result)
+    raise ImportError('missing a required module')
 
 
 def ovh_client(endpoint, application_key, application_secret, consumer_key):
@@ -195,18 +195,16 @@ def run_module():
                                 },
                     "templateName": module.params['template']}
         if module.params['install_server']:
-            return install_dedicated_server(client,
-                                            module.params['service'],
-                                            data)
+            install_dedicated_server(client, module.params['service'], data)
         if module.params['installation_status']:
-            return get_installation_status(client,
-                                           module.params['service'])
-    except APIError as error:
-        return error
-    except IOError as error:
-        return error
-    except Exception as error:
-        return error
+            result = get_installation_status(client,
+                                             module.params['service'])
+    except APIError as api_error:
+        module.fail_json(msg=str(api_error), **result)
+    except IOError as e:
+        module.fail_json(msg=str(e), **result)
+    except Exception as e:
+        module.fail_json(msg=str(e), **result)
 
     if module.check_mode:
         return result
