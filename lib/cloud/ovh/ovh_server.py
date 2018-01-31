@@ -195,15 +195,18 @@ def run_module():
                                 },
                     "templateName": module.params['template']}
         if module.params['install_server']:
-            install_dedicated_server(client, module.params['service'], data)
+            return install_dedicated_server(client,
+                                            module.params['service'],
+                                            data)
         if module.params['installation_status']:
-            result=get_installation_status(client, module.params['service'])
-    except APIError as api_error:
-        module.fail_json(msg=str(api_error), **result)
-    except IOError as e:
-        module.fail_json(msg=str(e), **result)
-    except Exception as e:
-        module.fail_json(msg=str(e), **result)
+            return get_installation_status(client,
+                                           module.params['service'])
+    except APIError as error:
+        return error
+    except IOError as error:
+        return error
+    except Exception as error:
+        return error
 
     if module.check_mode:
         return result
