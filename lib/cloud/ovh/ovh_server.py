@@ -158,7 +158,7 @@ def get_installation_status(client, service):
     try:
         return client.get('/dedicated/server/%s/install/status' % service)
     except APIError as api_error:
-        return 'API Error has occured. most likely server %s is not being installed' % service
+        return api_error
 
 
 def run_module():
@@ -201,8 +201,12 @@ def run_module():
         if module.params['install_server']:
             install_dedicated_server(client, module.params['service'], data)
         if module.params['installation_status']:
-            result['message'] = get_installation_status(client,
+            results = get_installation_status(client,
                                              module.params['service'])
+            if 'Server is not being installed or reinstalled at the moment' in results[0]:
+                result['original_message'] = results[0]
+                result['message'] = 'API Error has occured %s' % module.params['service']
+                result['changed'] = False
     except APIError as api_error:
         module.fail_json(msg=str(api_error), **result)
     except IOError as e:
