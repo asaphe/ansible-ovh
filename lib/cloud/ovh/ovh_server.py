@@ -84,6 +84,7 @@ message:
 '''
 
 from ansible.module_utils.basic import AnsibleModule
+import json
 import yaml
 import os
 try:
@@ -154,7 +155,10 @@ def install_dedicated_server(client, service, data):
 
 def get_installation_status(client, service):
     """Get installation status."""
-    return client.get('/dedicated/server/%s/install/status' % service)
+    try:
+        return client.get('/dedicated/server/%s/install/status' % service)
+    except APIError as api_error:
+        return 'API Error has occured. most likely server %s is not being installed' % service
 
 
 def run_module():
@@ -197,7 +201,7 @@ def run_module():
         if module.params['install_server']:
             install_dedicated_server(client, module.params['service'], data)
         if module.params['installation_status']:
-            result = get_installation_status(client,
+            result['message'] = get_installation_status(client,
                                              module.params['service'])
     except APIError as api_error:
         module.fail_json(msg=str(api_error), **result)
