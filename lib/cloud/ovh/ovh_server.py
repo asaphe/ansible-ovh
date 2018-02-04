@@ -207,6 +207,7 @@ def run_module():
                 result['original_message'] = results[0]
                 result['message'] = 'API Error has occured %s' % module.params['service']
                 result['changed'] = False
+                module.exit_json(**result)
     except APIError as api_error:
         module.fail_json(msg=str(api_error), **result)
     except IOError as e:
