@@ -1,3 +1,5 @@
+
+
 # ansible-ovh
 OVH API Ansible module
 
@@ -29,7 +31,7 @@ options:
     template:
         description:
             - Template name to use for the installation [must exist under /me/templates]
-        required: true
+        required: false
 
     hostname:
         description:
