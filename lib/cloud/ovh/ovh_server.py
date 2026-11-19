@@ -132,7 +132,7 @@ def ovh_client_env():
 def load_yaml(config_file):
     """Load the configuration file."""
     with open(config_file, 'r') as yml_file:
-        cfg = yaml.load(yml_file)
+        cfg = yaml.safe_load(yml_file)
     return cfg
 
 
